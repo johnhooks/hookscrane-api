@@ -5,7 +5,8 @@
     "require": ["typescript-transform-paths/register"]
   },
   "compilerOptions": {
-    "noEmit": true,
+    "rootDir": "src",
+    "outDir": "build",
     "plugins": [
       // Transform paths in output .js files
       { "transform": "typescript-transform-paths" },
@@ -14,6 +15,6 @@
     ]
   },
   "references": [{ "path": "src/lib" }, { "path": "src/server" }],
-  "include": ["src", "tests"],
+  "include": ["src"],
   "exclude": ["build"]
 }

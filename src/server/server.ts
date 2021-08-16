@@ -6,7 +6,8 @@ import initialize, {
 } from "fastify";
 import mercurius from "mercurius";
 
-import type { Context } from "./context";
+import type { Context } from "$lib/context";
+import { authenticate } from "$lib/security";
 
 import shutdownPlugin from "./plugins/shutdown";
 import statusPlugin from "./plugins/status";
@@ -24,12 +25,17 @@ export function createServer(opts: FastifyServerOptions = {}): FastifyInstance {
     schema,
     path: "/graphql",
     graphiql: true,
-    context: (request: FastifyRequest, reply: FastifyReply): Context => {
-      return {
+    context: async (request: FastifyRequest, reply: FastifyReply): Promise<Context> => {
+      const ctx = {
         prisma: server.prisma,
         request,
         reply,
+        session: null,
       };
+
+      const session = await authenticate(ctx);
+
+      return { ...ctx, session };
     },
   });
 

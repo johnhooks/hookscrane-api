@@ -381,7 +381,7 @@ export const schema = makeSchema({
   },
   contextType: {
     // After building we still need to find the src directory for the ts file
-    module: path.join(__dirname, "../../src/server/context.ts"),
+    module: path.join(__dirname, "../../src/lib/context.ts"),
     export: "Context",
   },
   sourceTypes: {
