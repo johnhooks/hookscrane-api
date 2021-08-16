@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "noEmit": false,
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "module": "commonjs",
+    "target": "esnext",
+    "moduleResolution": "node",
+    "strict": true,
+    "strictPropertyInitialization":false,
+    "skipLibCheck": true,
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "paths": {
+      "$server/*": ["src/server/*"],
+      "$lib/*": ["src/lib/*"]
+    }
+  }
+}

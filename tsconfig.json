@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.base.json",
+  "ts-node": {
+    "transpileOnly": true,
+    "require": ["typescript-transform-paths/register"]
+  },
+  "compilerOptions": {
+    "noEmit": true,
+    "plugins": [
+      // Transform paths in output .js files
+      { "transform": "typescript-transform-paths" },
+      // Transform paths in output .d.ts files (Include this line if you output declarations files)
+      { "transform": "typescript-transform-paths", "afterDeclarations": true }
+    ]
+  },
+  "references": [{ "path": "src/lib" }, { "path": "src/server" }],
+  "include": ["src", "tests"],
+  "exclude": ["build"]
+}

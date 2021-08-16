@@ -1,0 +1,7 @@
+build/
+src/server/generated/
+node_modules/
+
+.env*
+
+tsconfig.tsbuildinfo

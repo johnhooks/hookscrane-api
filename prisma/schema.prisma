@@ -1,0 +1,62 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["nApi"]
+}
+
+generator nexusPrisma {
+  provider = "nexus-prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int       @id @default(autoincrement())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  email          String    @unique @db.VarChar(100)
+  roles          Int       @default(0)
+  passwordDigest String    @db.VarChar(64)
+  firstName      String?   @db.VarChar(24)
+  lastName       String?   @db.VarChar(24)
+  sessions       Session[]
+  posts          Post[]
+  comments       Comment[]
+}
+
+model Session {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  token     String   @db.VarChar(40)
+  valid     Boolean  @default(true)
+  ip        String   @db.VarChar(40)
+  userAgent String   @db.VarChar(200)
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+}
+
+model Post {
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  title     String
+  content   String?
+  likes     Int       @default(0)
+  published Boolean   @default(false)
+  author    User?     @relation(fields: [authorId], references: [id])
+  authorId  Int?
+  comments  Comment[]
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  comment   String
+  postId    Int
+  post      Post     @relation(fields: [postId], references: [id])
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  Int
+}
