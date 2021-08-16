@@ -4,10 +4,12 @@ import jwt from "jsonwebtoken";
 import cookie from "cookie";
 import { addDays, differenceInSeconds } from "date-fns";
 
+import type { FastifyRequest } from "fastify";
 import type { Role } from "@prisma/client";
 import type { Maybe, TokenPayload, RefreshTokenPayload, SessionData } from "./interfaces";
 import type { Context } from "./context";
 
+import prisma from "./prisma-client";
 import { JWT_SECRET, DOMAIN } from "./constants";
 
 const isDev = process.env.NODE_ENV !== "production";
@@ -19,10 +21,10 @@ interface UserData {
   roles: Role[];
 }
 
-export const authenticate = async (ctx: Context): Promise<Maybe<SessionData>> => {
-  if (!(ctx.request.headers && ctx.request.headers.authorization)) return null;
+export const authenticate = async (request: FastifyRequest): Promise<Maybe<SessionData>> => {
+  if (!(request.headers && request.headers.authorization)) return null;
 
-  const [scheme, credentials] = ctx.request.headers.authorization.split(" ");
+  const [scheme, credentials] = request.headers.authorization.split(" ");
 
   if (!scheme || !/^Bearer$/i.test(scheme)) return null;
 
@@ -33,7 +35,7 @@ export const authenticate = async (ctx: Context): Promise<Maybe<SessionData>> =>
 
     const { sessionId } = payload;
 
-    const data = await ctx.prisma.session.findUnique({
+    const data = await prisma.session.findUnique({
       where: { id: sessionId },
       select: {
         id: true,

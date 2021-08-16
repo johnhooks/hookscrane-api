@@ -31,7 +31,7 @@ const Query = objectType({
     t.nonNull.list.nonNull.field("allUsers", {
       type: "User",
       resolve: async (_parent, _args, context, _info) => {
-        if (!context.session) throw NotAuthorized();
+        if (!context.request.session) throw NotAuthorized();
         const users = await context.prisma.user.findMany();
         return users;
       },
