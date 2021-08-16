@@ -1,9 +1,5 @@
 {
   "extends": "./tsconfig.base.json",
-  "ts-node": {
-    "transpileOnly": true,
-    "require": ["typescript-transform-paths/register"]
-  },
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "build",
@@ -14,7 +10,10 @@
       { "transform": "typescript-transform-paths", "afterDeclarations": true }
     ]
   },
-  "references": [{ "path": "src/lib" }, { "path": "src/server" }],
+  "references": [
+    { "path": "src/lib" },
+    { "path": "src/server" }
+  ],
   "include": ["src"],
   "exclude": ["build"]
 }

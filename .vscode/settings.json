@@ -9,7 +9,7 @@
   "files.insertFinalNewline": true,
   "files.exclude": {
     "**/node_modules": true,
-    "**/tsconfig.tsbuildinfo": true
+    "**/tsconfig.tsbuildinfo": false
   },
   "search.exclude": {
     "build/**": true,
