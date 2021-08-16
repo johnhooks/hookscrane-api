@@ -1,5 +1,9 @@
 {
   "extends": "./tsconfig.base.json",
+  "ts-node": {
+    "transpileOnly": true,
+    "require": ["typescript-transform-paths/register"]
+  },
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "build",

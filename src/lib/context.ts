@@ -7,5 +7,5 @@ export interface Context {
   prisma: PrismaClient;
   request: FastifyRequest;
   reply: FastifyReply;
-  session: Maybe<SessionData>;
+  session: Maybe<SessionData>; // This should be a plugin that decorates FastifyRequest
 }

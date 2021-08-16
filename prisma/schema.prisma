@@ -12,18 +12,41 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Period {
+  FREQUENT
+  PERIODIC
+  ANNUAL
+}
+
+enum Severity {
+  CRITIAL
+  INFO
+}
+
+enum DocumentEdgeType {
+  CRITERIA
+  ITEM
+  RULE
+}
+
 model User {
-  id             Int       @id @default(autoincrement())
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  email          String    @unique @db.VarChar(100)
-  roles          Int       @default(0)
-  passwordDigest String    @db.VarChar(64)
-  firstName      String?   @db.VarChar(24)
-  lastName       String?   @db.VarChar(24)
+  id             Int          @id @default(autoincrement())
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  email          String       @unique @db.VarChar(100)
+  passwordDigest String       @db.VarChar(64)
+  firstName      String?      @db.VarChar(24)
+  lastName       String?      @db.VarChar(24)
+  roles          Role[]
   sessions       Session[]
   posts          Post[]
   comments       Comment[]
+  Inspection     Inspection[]
 }
 
 model Session {
@@ -59,4 +82,81 @@ model Comment {
   post      Post     @relation(fields: [postId], references: [id])
   author    User     @relation(fields: [authorId], references: [id])
   authorId  Int
+}
+
+model DocumentNode {
+  id                Int                 @id @default(autoincrement())
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  name              String              @db.VarChar(24)
+  description       String?             @db.VarChar(280)
+  meta              Json
+  parents           DocumentEdge[]      @relation("Parent")
+  children          DocumentEdge[]      @relation("Child")
+  InpectionDocument InpectionDocument[] // Seems unnessary, but Prisma doesn't seem to have single sided relations
+  Deficiency        Deficiency[]
+}
+
+model DocumentEdge {
+  parent     DocumentNode     @relation(name: "Parent", fields: [parentId], references: [id])
+  parentId   Int // relation scalar field (used in the `@relation` attribute above)
+  child      DocumentNode     @relation(name: "Child", fields: [childId], references: [id])
+  childId    Int // relation scalar field (used in the `@relation` attribute above)
+  assignedAt DateTime         @default(now())
+  type       DocumentEdgeType
+  meta       Json
+
+  @@id([parentId, childId])
+  @@index([type])
+}
+
+model Crane {
+  id         Int          @id @default(autoincrement())
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  make       String       @db.VarChar(24)
+  model      String       @db.VarChar(24)
+  year       String       @db.VarChar(4)
+  serial     String       @db.VarChar(48)
+  inspection Inspection[]
+}
+
+model Deficiency {
+  id           Int          @id @default(autoincrement())
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  severity     Severity
+  meta         Json
+  node         DocumentNode @relation(fields: [nodeId], references: [id])
+  nodeId       Int // relation scalar field (used in the `@relation` attribute above)
+  inspection   Inspection   @relation(fields: [inspectionId], references: [id])
+  inspectionId Int // relation scalar field (used in the `@relation` attribute above)
+}
+
+model InpectionDocument {
+  id          Int          @id @default(autoincrement())
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  name        String       @db.VarChar(24)
+  description String?      @db.VarChar(280)
+  frequency   Period
+  node        DocumentNode @relation(fields: [nodeId], references: [id])
+  nodeId      Int // relation scalar field (used in the `@relation` attribute above)
+  Inspection  Inspection[]
+}
+
+model Inspection {
+  id         Int               @id @default(autoincrement())
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  datetime   DateTime          @db.Timestamp
+  hours      Int
+  miles      Int?
+  author     User              @relation(fields: [authorId], references: [id])
+  authorId   Int
+  crane      Crane             @relation(fields: [craneId], references: [id])
+  craneId    Int // relation scalar field (used in the `@relation` attribute above)
+  document   InpectionDocument @relation(fields: [documentId], references: [id])
+  documentId Int // relation scalar field (used in the `@relation` attribute above)
+  Deficiency Deficiency[]
 }

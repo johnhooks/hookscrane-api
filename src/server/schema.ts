@@ -12,10 +12,18 @@ import {
 } from "nexus";
 import { DateTimeResolver } from "graphql-scalars";
 import { User, Post, Comment } from "nexus-prisma";
+import createError from "fastify-error";
+
 // import { Prisma } from "@prisma/client";
 import * as path from "path";
 
 export const DateTime = asNexusMethod(DateTimeResolver, "date");
+
+const NotAuthorized = createError(
+  "FST_NOT_AUTHORIZED",
+  "Not authorized to access this resource",
+  401
+);
 
 const Query = objectType({
   name: "Query",
@@ -23,6 +31,7 @@ const Query = objectType({
     t.nonNull.list.nonNull.field("allUsers", {
       type: "User",
       resolve: async (_parent, _args, context, _info) => {
+        if (!context.session) throw NotAuthorized();
         const users = await context.prisma.user.findMany();
         return users;
       },
