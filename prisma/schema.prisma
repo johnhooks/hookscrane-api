@@ -30,6 +30,7 @@ enum Severity {
 
 enum DocumentEdgeType {
   CRITERIA
+  DEFICIENCY
   ITEM
   RULE
 }
@@ -46,7 +47,7 @@ model User {
   sessions       Session[]
   posts          Post[]
   comments       Comment[]
-  Inspection     Inspection[]
+  inspections    Inspection[]
 }
 
 model Session {
@@ -85,16 +86,16 @@ model Comment {
 }
 
 model DocumentNode {
-  id                Int                 @id @default(autoincrement())
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  name              String              @db.VarChar(24)
-  description       String?             @db.VarChar(280)
-  meta              Json
-  parents           DocumentEdge[]      @relation("Parent")
-  children          DocumentEdge[]      @relation("Child")
-  InpectionDocument InpectionDocument[] // Seems unnessary, but Prisma doesn't seem to have single sided relations
-  Deficiency        Deficiency[]
+  id                 Int                 @id @default(autoincrement())
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  name               String              @db.VarChar(24)
+  description        String?             @db.VarChar(280)
+  meta               Json
+  parents            DocumentEdge[]      @relation("Parent")
+  children           DocumentEdge[]      @relation("Child")
+  inpectionDocuments InpectionDocument[] // Seems unnessary, but Prisma doesn't seem to have single sided relations
+  deficiencies       Deficiency[]
 }
 
 model DocumentEdge {
@@ -111,14 +112,14 @@ model DocumentEdge {
 }
 
 model Crane {
-  id         Int          @id @default(autoincrement())
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-  make       String       @db.VarChar(24)
-  model      String       @db.VarChar(24)
-  year       String       @db.VarChar(4)
-  serial     String       @db.VarChar(48)
-  inspection Inspection[]
+  id          Int          @id @default(autoincrement())
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  make        String       @db.VarChar(24)
+  model       String       @db.VarChar(24)
+  year        String       @db.VarChar(4)
+  serial      String       @db.VarChar(48)
+  inspections Inspection[]
 }
 
 model Deficiency {
@@ -142,21 +143,21 @@ model InpectionDocument {
   frequency   Period
   node        DocumentNode @relation(fields: [nodeId], references: [id])
   nodeId      Int // relation scalar field (used in the `@relation` attribute above)
-  Inspection  Inspection[]
+  inspections Inspection[]
 }
 
 model Inspection {
-  id         Int               @id @default(autoincrement())
-  createdAt  DateTime          @default(now())
-  updatedAt  DateTime          @updatedAt
-  datetime   DateTime          @db.Timestamp
-  hours      Int
-  miles      Int?
-  author     User              @relation(fields: [authorId], references: [id])
-  authorId   Int
-  crane      Crane             @relation(fields: [craneId], references: [id])
-  craneId    Int // relation scalar field (used in the `@relation` attribute above)
-  document   InpectionDocument @relation(fields: [documentId], references: [id])
-  documentId Int // relation scalar field (used in the `@relation` attribute above)
-  Deficiency Deficiency[]
+  id           Int               @id @default(autoincrement())
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  datetime     DateTime          @db.Timestamp
+  hours        Int
+  miles        Int?
+  author       User              @relation(fields: [authorId], references: [id])
+  authorId     Int
+  crane        Crane             @relation(fields: [craneId], references: [id])
+  craneId      Int // relation scalar field (used in the `@relation` attribute above)
+  document     InpectionDocument @relation(fields: [documentId], references: [id])
+  documentId   Int // relation scalar field (used in the `@relation` attribute above)
+  deficiencies Deficiency[]
 }

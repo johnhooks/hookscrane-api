@@ -1,11 +1,6 @@
 import { intArg, nonNull, objectType, stringArg, arg, booleanArg } from "nexus";
-import createError from "fastify-error";
 
-const NotAuthorized = createError(
-  "FST_NOT_AUTHORIZED",
-  "Not authorized to access this resource",
-  401
-);
+import { NotAuthorized } from "../lib/errors";
 
 export const Query = objectType({
   name: "Query",
