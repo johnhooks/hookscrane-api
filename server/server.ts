@@ -13,11 +13,12 @@ import shutdownPlugin from "plugins/shutdown";
 import statusPlugin from "plugins/status";
 import prismaPlugin from "plugins/prisma";
 import { schema } from "schema";
+import { REDIS_PASSWORD } from "lib/constants";
 
 export function createServer(opts: FastifyServerOptions = {}): FastifyInstance {
   const server = initialize(opts);
 
-  server.register(fastifyRedis, { host: "127.0.0.1", password: "" });
+  server.register(fastifyRedis, { host: "127.0.0.1", password: REDIS_PASSWORD });
   server.register(shutdownPlugin);
   server.register(statusPlugin);
   server.register(prismaPlugin);

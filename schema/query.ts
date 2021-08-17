@@ -1,6 +1,6 @@
 import { intArg, nonNull, objectType, stringArg, arg, booleanArg } from "nexus";
 
-import { NotAuthorized } from "../lib/errors";
+import { NotAuthorized } from "lib/errors";
 
 export const Query = objectType({
   name: "Query",

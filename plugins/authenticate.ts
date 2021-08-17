@@ -1,4 +1,4 @@
-import { authenticate } from "../lib/security";
+import { authenticate } from "lib/security";
 
 import fp from "fastify-plugin";
 import { FastifyPluginAsync } from "fastify";

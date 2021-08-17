@@ -6,7 +6,7 @@
   "author": "John Hooks <bitmachina@outlook.com>",
   "license": "UNLICENSED",
   "scripts": {
-    "start": "-r build/main.js",
+    "start": "node build/main.js",
     "start:local": "node -r dotenv/config build/main.js",
     "build": "npm run clean && npm run generate && npm run build:esbuild",
     "build:esbuild": "node ./scripts/build.js",

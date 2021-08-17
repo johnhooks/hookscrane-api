@@ -1,7 +1,7 @@
 import fp from "fastify-plugin";
 import { FastifyPluginAsync } from "fastify";
 
-import prisma from "../lib/prisma-client";
+import prisma from "lib/prisma-client";
 
 const prismaPlugin: FastifyPluginAsync = fp(
   async (server, _options) => {
