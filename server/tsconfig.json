@@ -1,8 +1,8 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "rootDir": "./",
-    "outDir": "../../build/server"
+    "outDir": "../build/server"
   },
   "references": [
     { "path": "../lib" },

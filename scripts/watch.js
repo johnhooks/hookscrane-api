@@ -1,0 +1,50 @@
+const path = require("path");
+const { build } = require("esbuild");
+
+build({
+  entryPoints: [path.resolve(__dirname, "../main.ts")],
+  bundle: true,
+  watch: {
+    onRebuild(error, result) {
+      if (error) {
+        console.error("watch build failed:", error);
+      } else {
+        console.log("watch build succeeded:", { errors: result.errors, warnings: result.warnings });
+      }
+    },
+  },
+  outdir: path.resolve(__dirname, "../build"),
+  platform: "node",
+  format: "cjs",
+  sourcemap: "inline",
+  external: [
+    "@prisma/client",
+    "bcrypt",
+    "cookie",
+    "date-fns",
+    "fastify",
+    "fastify-plugin",
+    "graphql",
+    "graphql-scalars",
+    "ioredis",
+    "jsonwebtoken",
+    "lodash",
+    "mercurius",
+    "nexus",
+    "nexus-prisma",
+  ],
+})
+  .then(result => {
+    let called;
+    function stop() {
+      if (!called) {
+        console.log("\nwatching ./build interrupted");
+        result.stop();
+      }
+      called = true;
+    }
+    process.on("SIGINT", stop);
+    process.on("SIGTERM", stop);
+    console.log("watching ./build");
+  })
+  .catch(() => process.exit(1));

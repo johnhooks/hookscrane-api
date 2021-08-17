@@ -1,4 +1,4 @@
 build/
-src/schema/generated/
+schema/generated/
 package.json
 package-lock.json

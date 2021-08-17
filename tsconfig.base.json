@@ -15,10 +15,11 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "paths": {
-      "$lib/*": ["src/lib/*"],
-      "$plugins/*": ["src/plugins/*"],
-      "$schema/*": ["src/schema/*"],
-      "$server/*": ["src/server/*"],
+      "lib/*": ["lib/*"],
+      "plugins/*": ["plugins/*"],
+      "schema": ["schema/"],
+      "schema/*": ["schema/*"],
+      "server/*": ["server/*"],
     },
     "typeRoots": ["types", "./node_modules/@types"]
   }

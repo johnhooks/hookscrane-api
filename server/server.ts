@@ -6,13 +6,13 @@ import initialize, {
 } from "fastify";
 import mercurius from "mercurius";
 import fastifyRedis from "fastify-redis";
-import type { Context } from "../lib/context";
+import type { Context } from "lib/context";
 
-import authenticatePlugin from "../plugins/authenticate";
-import shutdownPlugin from "../plugins/shutdown";
-import statusPlugin from "../plugins/status";
-import prismaPlugin from "../plugins/prisma";
-import { schema } from "../schema";
+import authenticatePlugin from "plugins/authenticate";
+import shutdownPlugin from "plugins/shutdown";
+import statusPlugin from "plugins/status";
+import prismaPlugin from "plugins/prisma";
+import { schema } from "schema";
 
 export function createServer(opts: FastifyServerOptions = {}): FastifyInstance {
   const server = initialize(opts);

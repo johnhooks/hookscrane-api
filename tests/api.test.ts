@@ -1,6 +1,6 @@
 import { createMercuriusTestClient } from "mercurius-integration-testing";
 
-import { createServer } from "../src/server/server";
+import { createServer } from "../server/server";
 
 describe("api endpoints", () => {
   const server = createServer({ logger: false });

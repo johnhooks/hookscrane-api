@@ -1,3 +1,3 @@
 export default function logger(): void {
-  console.log("Hello World!");
+  console.log("Hello world!");
 }
