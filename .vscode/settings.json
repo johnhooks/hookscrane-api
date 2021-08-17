@@ -24,6 +24,7 @@
     "csrf",
     "dataloader",
     "dev",
+    "esbuild",
     "fastify",
     "hookscrane",
     "mercurius",

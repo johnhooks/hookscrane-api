@@ -1,18 +1,13 @@
-import { authenticate } from "$lib/security";
+import { authenticate } from "../lib/security";
 
 import fp from "fastify-plugin";
 import { FastifyPluginAsync } from "fastify";
 
-import { Maybe, SessionData } from "$lib/interfaces";
-
-declare module "fastify" {
-  interface FastifyRequest {
-    session: Maybe<SessionData>;
-  }
-}
-
 const authenticatePlugin: FastifyPluginAsync = fp(
   async (server, _options) => {
+    /**
+     * NOTE: The FastifyRequest interface is extended in types/fastify/index.d.ts
+     */
     server.decorateRequest("session", null);
 
     server.addHook("onRequest", async request => {

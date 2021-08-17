@@ -1,19 +1,15 @@
 import fp from "fastify-plugin";
 import { FastifyPluginAsync } from "fastify";
-import type { PrismaClient } from "@prisma/client";
 
-import prisma from "$lib/prisma-client";
-
-declare module "fastify" {
-  interface FastifyInstance {
-    prisma: PrismaClient;
-  }
-}
+import prisma from "../lib/prisma-client";
 
 const prismaPlugin: FastifyPluginAsync = fp(
   async (server, _options) => {
     await prisma.$connect();
 
+    /**
+     * NOTE: The FastifyInstance interface is extended in types/fastify/index.d.ts
+     */
     server.decorate("prisma", prisma);
 
     server.addHook("onClose", async server => {

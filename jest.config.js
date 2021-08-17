@@ -4,8 +4,10 @@ module.exports = {
   moduleNameMapper: {
     // Intended to map esm modules with a `.js` ending to a commonjs module with no ending
     // "^(\\.{1,2}/.*)\\.js$": "$1",
-    "^\\$server/(.*)$": "<rootDir>/src/server/$1",
     "^\\$lib/(.*)$": "<rootDir>/src/lib/$1",
+    "^\\$plugins/(.*)$": "<rootDir>/src/plugins/$1",
+    "^\\$schema/(.*)$": "<rootDir>/src/schema/$1",
+    "^\\$server/(.*)$": "<rootDir>/src/server/$1",
   },
   transform: {
     "^.+\\.(ts|tsx)$": "ts-jest",

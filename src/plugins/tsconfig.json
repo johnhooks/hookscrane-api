@@ -2,12 +2,10 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "rootDir": "./",
-    "outDir": "../../build/server"
+    "outDir": "../../build/plugins"
   },
   "references": [
-    { "path": "../lib" },
-    { "path": "../plugins" },
-    { "path": "../schema" }
+    { "path": "../lib" }
   ],
   "include": ["**/*"]
 }

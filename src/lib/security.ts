@@ -35,6 +35,8 @@ export const authenticate = async (request: FastifyRequest): Promise<Maybe<Sessi
 
     const { sessionId } = payload;
 
+    // TODO lookup session data with redis
+
     const data = await prisma.session.findUnique({
       where: { id: sessionId },
       select: {

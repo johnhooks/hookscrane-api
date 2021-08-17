@@ -27,3 +27,12 @@
 ### watch
 
 - `npx ts-node-dev --respawn -r typescript-transform-paths/register --transpile-only src/app/main.ts`
+
+## TODO
+
+- [x] - Move `src/server/schema.ts` into it's own project folder
+- [x] - Split `src/schema/schema.ts` into a separate files
+- [ ] - Read [Writing your first schema](https://nexusjs.org/docs/getting-started/tutorial/chapter-writing-your-first-schema/)
+- [ ] - Start modeling the graphql schema for inspections
+- [ ] - Set and get session data with redis for authentication
+- [ ] - Clean up the removal of tsconfig.json paths

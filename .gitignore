@@ -1,5 +1,5 @@
 build/
-src/server/generated/
+src/schema/generated/
 node_modules/
 
 .env*

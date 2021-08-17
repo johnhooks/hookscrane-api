@@ -16,6 +16,7 @@ glob(path.resolve(__dirname, "../src/**/*.ts"), function (err, entryPoints) {
     // write: false,
     outdir: path.resolve(__dirname, "../build"),
     platform: "node",
+    format: "cjs",
     sourcemap: "inline",
     // external: [
     //   "@prisma/client",

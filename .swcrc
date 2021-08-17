@@ -16,8 +16,10 @@
       "dynamicImport": true
     },
     "paths": {
-      "$server/*": ["src/server/*"],
-      "$lib/*": ["src/lib/*"]
+      "$lib/*": ["src/lib/*"],
+      "$plugins/*": ["src/plugins/*"],
+      "$schema/*": ["src/schema/*"],
+      "$server/*": ["src/server/*"]
     }
   }
 }

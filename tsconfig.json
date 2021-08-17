@@ -16,6 +16,8 @@
   },
   "references": [
     { "path": "src/lib" },
+    { "path": "src/plugins" },
+    { "path": "src/schema" },
     { "path": "src/server" }
   ],
   "include": ["src"],
