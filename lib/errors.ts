@@ -5,3 +5,5 @@ export const NotAuthorized = createError(
   "Not authorized to access this resource",
   401
 );
+
+export const LoginFailed = createError("FST_LOGIN_FAILED", "Login attempt failed", 401);

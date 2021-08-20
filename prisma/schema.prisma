@@ -28,26 +28,38 @@ enum Severity {
   INFO
 }
 
-enum DocumentEdgeType {
-  CRITERIA
-  DEFICIENCY
+enum DocumentNodeType {
   ITEM
+  SUBITEM
+  FORM
+  RECORD
+  ROOT
+  TYPE
+}
+
+enum DocumentEdgeType {
+  DEFICIENCY
+  INSPECTION
+  LINK // A general way to link documents
+  MAINTENANCE
   RULE
+  SCHEDULE
 }
 
 model User {
-  id             Int          @id @default(autoincrement())
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  email          String       @unique @db.VarChar(100)
-  passwordDigest String       @db.VarChar(64)
-  firstName      String?      @db.VarChar(24)
-  lastName       String?      @db.VarChar(24)
+  id             Int            @id @default(autoincrement())
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  email          String         @unique @db.VarChar(100)
+  passwordDigest String         @db.VarChar(64)
+  firstName      String?        @db.VarChar(24)
+  lastName       String?        @db.VarChar(24)
+  meta           Json
   roles          Role[]
   sessions       Session[]
   posts          Post[]
   comments       Comment[]
-  inspections    Inspection[]
+  documents      DocumentNode[]
 }
 
 model Session {
@@ -86,78 +98,62 @@ model Comment {
 }
 
 model DocumentNode {
-  id                 Int                 @id @default(autoincrement())
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  name               String              @db.VarChar(24)
-  description        String?             @db.VarChar(280)
-  meta               Json
-  parents            DocumentEdge[]      @relation("Parent")
-  children           DocumentEdge[]      @relation("Child")
-  inpectionDocuments InpectionDocument[] // Seems unnessary, but Prisma doesn't seem to have single sided relations
-  deficiencies       Deficiency[]
+  id        Int              @id @default(autoincrement())
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  type      DocumentNodeType
+  name      String           @db.VarChar(24)
+  text      String?          @db.VarChar(280)
+  meta      Json?
+  datetime  DateTime?        @default(now())
+  owner     User?            @relation(fields: [ownerId], references: [id])
+  ownerId   Int? // relation scalar field (used in the `@relation` attribute above)
+  // NOTE: The relation linking took some time to figureout, they need to be reversed on these models.
+  parents   DocumentEdge[]   @relation("Child")
+  children  DocumentEdge[]   @relation("Parent")
+
+  @@index([type])
 }
 
 model DocumentEdge {
+  assignedAt DateTime         @default(now())
+  type       DocumentEdgeType
+  meta       Json?
   parent     DocumentNode     @relation(name: "Parent", fields: [parentId], references: [id])
   parentId   Int // relation scalar field (used in the `@relation` attribute above)
   child      DocumentNode     @relation(name: "Child", fields: [childId], references: [id])
   childId    Int // relation scalar field (used in the `@relation` attribute above)
-  assignedAt DateTime         @default(now())
-  type       DocumentEdgeType
-  meta       Json
 
   @@id([parentId, childId])
   @@index([type])
 }
 
-model Crane {
-  id          Int          @id @default(autoincrement())
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  make        String       @db.VarChar(24)
-  model       String       @db.VarChar(24)
-  year        String       @db.VarChar(4)
-  serial      String       @db.VarChar(48)
-  inspections Inspection[]
+enum LogType {
+  START
+  END
 }
 
-model Deficiency {
-  id           Int          @id @default(autoincrement())
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  severity     Severity
-  meta         Json
-  node         DocumentNode @relation(fields: [nodeId], references: [id])
-  nodeId       Int // relation scalar field (used in the `@relation` attribute above)
-  inspection   Inspection   @relation(fields: [inspectionId], references: [id])
-  inspectionId Int // relation scalar field (used in the `@relation` attribute above)
+enum InspectType {
+  VEHICLE
+  CRANE
 }
 
-model InpectionDocument {
-  id          Int          @id @default(autoincrement())
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  name        String       @db.VarChar(24)
-  description String?      @db.VarChar(280)
-  frequency   Period
-  node        DocumentNode @relation(fields: [nodeId], references: [id])
-  nodeId      Int // relation scalar field (used in the `@relation` attribute above)
-  inspections Inspection[]
+// These models are to speed up the minimum viable product and get it shipped
+
+model DailyInspect {
+  id       Int         @id @default(autoincrement())
+  type     InspectType
+  datetime DateTime
+  hours    Int
+  meta     Json
+
+  @@index([type])
 }
 
-model Inspection {
-  id           Int               @id @default(autoincrement())
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
-  datetime     DateTime          @db.Timestamp
-  hours        Int
-  miles        Int?
-  author       User              @relation(fields: [authorId], references: [id])
-  authorId     Int
-  crane        Crane             @relation(fields: [craneId], references: [id])
-  craneId      Int // relation scalar field (used in the `@relation` attribute above)
-  document     InpectionDocument @relation(fields: [documentId], references: [id])
-  documentId   Int // relation scalar field (used in the `@relation` attribute above)
-  deficiencies Deficiency[]
+model DailyLog {
+  id       Int      @id @default(autoincrement())
+  type     LogType
+  datetime DateTime
+  miles    Int
+  meta     Json
 }

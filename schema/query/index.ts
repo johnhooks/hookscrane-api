@@ -2,6 +2,10 @@ import { intArg, nonNull, objectType, stringArg, arg, booleanArg } from "nexus";
 
 import { NotAuthorized } from "lib/errors";
 
+export * from "./daily-inspect-queries";
+export * from "./daily-log-queries";
+export * from "./me-query";
+
 export const Query = objectType({
   name: "Query",
   definition(t) {
@@ -95,6 +99,24 @@ export const Query = objectType({
             },
           });
         return drafts;
+      },
+    });
+
+    t.nonNull.list.nonNull.field("allItems", {
+      type: "Item",
+      resolve: async (_parent, _args, context, _info) => {
+        const items = await context.prisma.documentNode.findMany({
+          where: {
+            type: "ITEM",
+          },
+          select: {
+            id: true,
+            name: true,
+            text: true,
+            meta: true,
+          },
+        });
+        return items;
       },
     });
   },

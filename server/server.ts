@@ -5,6 +5,7 @@ import initialize, {
   FastifyReply,
 } from "fastify";
 import mercurius from "mercurius";
+import fastifyCors from "fastify-cors";
 import fastifyRedis from "fastify-redis";
 import type { Context } from "lib/context";
 
@@ -19,6 +20,7 @@ export function createServer(opts: FastifyServerOptions = {}): FastifyInstance {
   const server = initialize(opts);
 
   server.register(fastifyRedis, { host: "127.0.0.1", password: REDIS_PASSWORD });
+  server.register(fastifyCors, { origin: "https://hooks.app.local", credentials: true });
   server.register(shutdownPlugin);
   server.register(statusPlugin);
   server.register(prismaPlugin);

@@ -1,8 +1,41 @@
 import { intArg, nonNull, objectType, stringArg, arg, booleanArg } from "nexus";
 
+import { LoginFailed } from "lib/errors";
+
+export * from "./daily-inspect-mutations";
+export * from "./daily-log-mutations";
+
 export const Mutation = objectType({
   name: "Mutation",
   definition(t) {
+    t.nonNull.field("login", {
+      type: "LoginResponse",
+      args: {
+        email: nonNull(stringArg()),
+        password: nonNull(stringArg()),
+      },
+      resolve: async (_, args, ctx, _info) => {
+        const user = await ctx.prisma.user.findUnique({
+          where: {
+            email: args.email,
+          },
+          select: {
+            id: true,
+            passwordDigest: true,
+            email: true,
+            roles: true,
+            firstName: true,
+            lastName: true,
+          },
+        });
+
+        if (!user) throw LoginFailed();
+
+        // dummy response
+        return { token: "token", tokenExpires: new Date(1), user };
+      },
+    });
+
     t.nonNull.field("signupUser", {
       type: "User",
       args: {
@@ -22,6 +55,7 @@ export const Mutation = objectType({
             firstName: args.data.firstName,
             lastName: args.data.lastName,
             passwordDigest: "password",
+            meta: {},
             posts: {
               create: postData,
             },
@@ -127,6 +161,28 @@ export const Mutation = objectType({
           where: { id: args.id },
         });
         return post;
+      },
+    });
+
+    t.field("createItem", {
+      type: "Item",
+      args: {
+        data: nonNull(
+          arg({
+            type: "ItemCreateInput",
+          })
+        ),
+      },
+      resolve: async (_, args, context) => {
+        const item = await context.prisma.documentNode.create({
+          data: {
+            type: "ITEM",
+            name: args.data.name,
+            text: args.data.text,
+            meta: args.data.meta,
+          },
+        });
+        return item;
       },
     });
   },

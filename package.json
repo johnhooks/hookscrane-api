@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "start": "node build/main.js",
-    "start:local": "node -r dotenv/config build/main.js",
+    "start:local": "node --require dotenv/config build/main.js",
     "build": "npm run clean && npm run generate && npm run build:esbuild",
     "build:esbuild": "node ./scripts/build.js",
     "build:swc": "swc src --out-dir build",
@@ -15,16 +15,17 @@
     "clean": "rm -rf build",
     "dev": "concurrently -n esbuild,server \"npm run dev:esbuild\" \"npm run dev:start\" -c magenta,blue",
     "dev:esbuild": "node ./scripts/watch.js",
-    "dev:start": "nodemon --exec \"node --enable-source-maps -r dotenv/config build/main.js\" --watch build",
-    "dev:ts-node": "ts-node-dev --respawn --watch server,schema -r dotenv/config -r typescript-transform-paths/register --transpile-only main.ts",
+    "dev:start": "nodemon --exec \"node --enable-source-maps --require dotenv/config build/main.js\" --watch build",
+    "dev:ts-node": "ts-node-dev --respawn --watch server,schema --require dotenv/config --require typescript-transform-paths/register --transpile-only main.ts",
     "generate": "npm -s run generate:prisma && npm -s run generate:nexus",
     "generate:prisma": "prisma generate",
-    "generate:nexus": "ts-node --transpile-only schema/index",
+    "generate:nexus": "ts-node --require typescript-transform-paths/register --transpile-only schema/index",
     "db:push": "prisma db push --preview-feature",
     "migrate:dev": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
     "migrate:reset": "prisma migrate reset",
-    "test": "jest"
+    "test": "jest",
+    "ts-node": "ts-node --require typescript-transform-paths/register"
   },
   "dependencies": {
     "@prisma/client": "2.27.x",
@@ -32,6 +33,7 @@
     "cookie": "^0.4.1",
     "date-fns": "^2.23.0",
     "fastify": "^3.20.2",
+    "fastify-cors": "^6.0.2",
     "fastify-plugin": "^3.0.0",
     "fastify-redis": "^4.3.1",
     "graphql": "^15.5.1",

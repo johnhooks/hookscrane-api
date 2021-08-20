@@ -15,3 +15,5 @@ function get(variable: string): string {
   }
   return process.env[variable] as string;
 }
+
+export const BCRYPT_SALT_ROUNDS = 10;

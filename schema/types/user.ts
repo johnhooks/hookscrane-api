@@ -1,16 +1,14 @@
-import { objectType, inputObjectType, asNexusMethod } from "nexus";
-import { DateTimeResolver } from "graphql-scalars";
+import { objectType, inputObjectType } from "nexus";
 import { User } from "nexus-prisma";
-
-export const DateTime = asNexusMethod(DateTimeResolver, "date");
 
 export const UserType = objectType({
   name: User.$name,
   definition(t) {
-    t.field(User.id);
-    t.field(User.email);
+    t.nonNull.field(User.id);
+    t.nonNull.field(User.email);
     t.field(User.firstName);
     t.field(User.lastName);
+    t.nonNull.field(User.roles);
     // Relation fields can use the generated resolver from nexus-prisma or a custom one
     t.field(User.posts);
   },

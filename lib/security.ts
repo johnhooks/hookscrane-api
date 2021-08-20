@@ -1,16 +1,19 @@
 import { randomBytes } from "crypto";
 import _ from "lodash";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 import cookie from "cookie";
 import { addDays, differenceInSeconds } from "date-fns";
 
 import type { FastifyRequest } from "fastify";
 import type { Role } from "@prisma/client";
+import type { NexusGenFieldTypes } from "schema/generated/nexus";
 import type { Maybe, TokenPayload, RefreshTokenPayload, SessionData } from "./interfaces";
 import type { Context } from "./context";
 
 import prisma from "./prisma-client";
-import { JWT_SECRET, DOMAIN } from "./constants";
+import { JWT_SECRET, DOMAIN, BCRYPT_SALT_ROUNDS } from "./constants";
+import { LoginFailed } from "lib/errors";
 
 const isDev = process.env.NODE_ENV !== "production";
 const secure = !isDev;
@@ -19,6 +22,40 @@ const sameSite = isDev ? "lax" : "strict";
 interface UserData {
   id: number;
   roles: Role[];
+}
+
+type LoginResponse = NexusGenFieldTypes["LoginResponse"];
+
+export function verifyPassword(password: string, passwordDigest: string): Promise<boolean> {
+  return bcrypt.compare(password, passwordDigest);
+}
+
+export function setPasswordHash(password: string): Promise<string> {
+  return bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
+}
+
+export async function login<Args extends { email: string; password: string }>(
+  args: Args,
+  ctx: Context
+): Promise<LoginResponse> {
+  const user = await ctx.prisma.user.findUnique({
+    where: {
+      email: args.email,
+    },
+    select: {
+      id: true,
+      passwordDigest: true,
+      email: true,
+      roles: true,
+      firstName: true,
+      lastName: true,
+    },
+  });
+
+  if (!user) throw LoginFailed();
+
+  // dummy response
+  return { token: "token", tokenExpires: new Date(1), user };
 }
 
 export const authenticate = async (request: FastifyRequest): Promise<Maybe<SessionData>> => {
