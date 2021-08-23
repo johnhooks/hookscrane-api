@@ -9,8 +9,6 @@ export const UserType = objectType({
     t.field(User.firstName);
     t.field(User.lastName);
     t.nonNull.field(User.roles);
-    // Relation fields can use the generated resolver from nexus-prisma or a custom one
-    t.field(User.posts);
   },
 });
 
@@ -28,6 +26,5 @@ export const UserCreateInput = inputObjectType({
     t.nonNull.string("email");
     t.string("firstName");
     t.string("lastName");
-    t.list.nonNull.field("posts", { type: "PostCreateInput" });
   },
 });

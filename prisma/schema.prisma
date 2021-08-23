@@ -17,49 +17,27 @@ enum Role {
   ADMIN
 }
 
-enum Period {
-  FREQUENT
-  PERIODIC
-  ANNUAL
+enum LogType {
+  START
+  END
 }
 
-enum Severity {
-  CRITIAL
-  INFO
-}
-
-enum DocumentNodeType {
-  ITEM
-  SUBITEM
-  FORM
-  RECORD
-  ROOT
-  TYPE
-}
-
-enum DocumentEdgeType {
-  DEFICIENCY
-  INSPECTION
-  LINK // A general way to link documents
-  MAINTENANCE
-  RULE
-  SCHEDULE
+enum InspectType {
+  VEHICLE
+  CRANE
 }
 
 model User {
-  id             Int            @id @default(autoincrement())
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  email          String         @unique @db.VarChar(100)
-  passwordDigest String         @db.VarChar(64)
-  firstName      String?        @db.VarChar(24)
-  lastName       String?        @db.VarChar(24)
+  id             Int       @id @default(autoincrement())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  email          String    @unique @db.VarChar(100)
+  passwordDigest String    @db.VarChar(64)
+  firstName      String?   @db.VarChar(24)
+  lastName       String?   @db.VarChar(24)
   meta           Json
   roles          Role[]
   sessions       Session[]
-  posts          Post[]
-  comments       Comment[]
-  documents      DocumentNode[]
 }
 
 model Session {
@@ -72,70 +50,6 @@ model Session {
   userAgent String   @db.VarChar(200)
   user      User     @relation(fields: [userId], references: [id])
   userId    Int
-}
-
-model Post {
-  id        Int       @id @default(autoincrement())
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  title     String
-  content   String?
-  likes     Int       @default(0)
-  published Boolean   @default(false)
-  author    User?     @relation(fields: [authorId], references: [id])
-  authorId  Int?
-  comments  Comment[]
-}
-
-model Comment {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  comment   String
-  postId    Int
-  post      Post     @relation(fields: [postId], references: [id])
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  Int
-}
-
-model DocumentNode {
-  id        Int              @id @default(autoincrement())
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-  type      DocumentNodeType
-  name      String           @db.VarChar(24)
-  text      String?          @db.VarChar(280)
-  meta      Json?
-  datetime  DateTime?        @default(now())
-  owner     User?            @relation(fields: [ownerId], references: [id])
-  ownerId   Int? // relation scalar field (used in the `@relation` attribute above)
-  // NOTE: The relation linking took some time to figureout, they need to be reversed on these models.
-  parents   DocumentEdge[]   @relation("Child")
-  children  DocumentEdge[]   @relation("Parent")
-
-  @@index([type])
-}
-
-model DocumentEdge {
-  assignedAt DateTime         @default(now())
-  type       DocumentEdgeType
-  meta       Json?
-  parent     DocumentNode     @relation(name: "Parent", fields: [parentId], references: [id])
-  parentId   Int // relation scalar field (used in the `@relation` attribute above)
-  child      DocumentNode     @relation(name: "Child", fields: [childId], references: [id])
-  childId    Int // relation scalar field (used in the `@relation` attribute above)
-
-  @@id([parentId, childId])
-  @@index([type])
-}
-
-enum LogType {
-  START
-  END
-}
-
-enum InspectType {
-  VEHICLE
-  CRANE
 }
 
 // These models are to speed up the minimum viable product and get it shipped

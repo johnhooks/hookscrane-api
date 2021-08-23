@@ -5,6 +5,6 @@ export const LoginResponseType = objectType({
   definition(t) {
     t.nonNull.field("user", { type: "User" });
     t.nonNull.string("token");
-    t.nonNull.date("tokenExpires");
+    t.nonNull.datetime("tokenExpires");
   },
 });
