@@ -11,7 +11,7 @@ const authenticatePlugin: FastifyPluginAsync = fp(
     server.decorateRequest("session", null);
 
     server.addHook("onRequest", async request => {
-      request.session = await authenticate(request);
+      request.session = await authenticate(server, request);
     });
   },
   {

@@ -7,6 +7,7 @@ export interface TokenPayload {
 }
 
 export interface RefreshTokenPayload {
+  userId: number;
   sessionId: number;
   sessionToken: string;
 }

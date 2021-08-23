@@ -5,24 +5,18 @@ import bcrypt from "bcrypt";
 import cookie from "cookie";
 import { addDays, differenceInSeconds } from "date-fns";
 
-import type { FastifyRequest } from "fastify";
-import type { Role } from "@prisma/client";
+import type { FastifyRequest, FastifyInstance } from "fastify";
+import type { User, Session } from "@prisma/client";
 import type { NexusGenFieldTypes } from "schema/generated/nexus";
 import type { Maybe, TokenPayload, RefreshTokenPayload, SessionData } from "./interfaces";
 import type { Context } from "./context";
 
-import prisma from "./prisma-client";
 import { JWT_SECRET, DOMAIN, BCRYPT_SALT_ROUNDS } from "./constants";
 import { LoginFailed } from "lib/errors";
 
 const isDev = process.env.NODE_ENV !== "production";
 const secure = !isDev;
 const sameSite = isDev ? "lax" : "strict";
-
-interface UserData {
-  id: number;
-  roles: Role[];
-}
 
 type LoginResponse = NexusGenFieldTypes["LoginResponse"];
 
@@ -38,6 +32,8 @@ export async function login<Args extends { email: string; password: string }>(
   args: Args,
   ctx: Context
 ): Promise<LoginResponse> {
+  const refreshToken = await getRefreshToken(ctx);
+
   const user = await ctx.prisma.user.findUnique({
     where: {
       email: args.email,
@@ -52,13 +48,30 @@ export async function login<Args extends { email: string; password: string }>(
     },
   });
 
-  if (!user) throw LoginFailed();
+  if (!(user && (await verifyPassword(args.password, user.passwordDigest)))) throw LoginFailed();
 
-  // dummy response
-  return { token: "token", tokenExpires: new Date(1), user };
+  // It's possible someone attempts to login after someone else in the same client
+  // Or someone could have stolen the refresh token cookie.
+  const session =
+    !refreshToken || refreshToken.userId !== user.id
+      ? await createSession(ctx, user)
+      : await refreshSession(ctx, refreshToken.sessionId);
+
+  await setRefreshToken(ctx, {
+    userId: user.id,
+    sessionId: session.id,
+    sessionToken: session.token,
+  });
+
+  const accessToken = createAccessToken(session.id);
+
+  return { ...accessToken, user };
 }
 
-export const authenticate = async (request: FastifyRequest): Promise<Maybe<SessionData>> => {
+export const authenticate = async (
+  server: FastifyInstance,
+  request: FastifyRequest
+): Promise<Maybe<SessionData>> => {
   if (!(request.headers && request.headers.authorization)) return null;
 
   const [scheme, credentials] = request.headers.authorization.split(" ");
@@ -74,7 +87,7 @@ export const authenticate = async (request: FastifyRequest): Promise<Maybe<Sessi
 
     // TODO lookup session data with redis
 
-    const data = await prisma.session.findUnique({
+    const data = await server.prisma.session.findUnique({
       where: { id: sessionId },
       select: {
         id: true,
@@ -105,8 +118,11 @@ export const authenticate = async (request: FastifyRequest): Promise<Maybe<Sessi
   }
 };
 
-export async function createSession(ctx: Context, user: UserData): Promise<SessionData> {
-  const session = await ctx.prisma.session.create({
+export function createSession(
+  ctx: Context,
+  user: Pick<User, "id">
+): Promise<Pick<Session, "id" | "token">> {
+  return ctx.prisma.session.create({
     data: {
       userId: user.id,
       token: generateToken(),
@@ -115,16 +131,21 @@ export async function createSession(ctx: Context, user: UserData): Promise<Sessi
     },
     select: { id: true, token: true },
   });
-  return { user, session };
 }
 
-export async function refreshSession(ctx: Context, sessionId: number): Promise<SessionData> {
-  const { token, user } = await ctx.prisma.session.update({
-    where: { id: sessionId },
-    data: { token: generateToken() },
-    select: { token: true, user: { select: { id: true, roles: true } } },
-  });
-  return { user, session: { id: sessionId, token } };
+export async function refreshSession(
+  ctx: Context,
+  id: number
+): Promise<Pick<Session, "id" | "token">> {
+  return ctx.prisma.session
+    .update({
+      where: { id },
+      data: { token: generateToken() },
+      select: { token: true },
+    })
+    .then(({ token }) => {
+      return { id, token };
+    });
 }
 
 export async function getRefreshToken(ctx: Context): Promise<RefreshTokenPayload | undefined> {
@@ -146,10 +167,17 @@ export async function getRefreshToken(ctx: Context): Promise<RefreshTokenPayload
 
 export async function setRefreshToken(ctx: Context, payload: RefreshTokenPayload): Promise<void> {
   const now = new Date();
-  const refreshExpires = addDays(now, 30);
-  const expiresIn = differenceInSeconds(refreshExpires, now);
+  const expires = addDays(now, 30);
+  const expiresIn = differenceInSeconds(expires, now);
   const refreshTokenJwt = await jwtSign(payload, { expiresIn });
-  setCookie(ctx, "refreshToken", refreshTokenJwt, { expires: refreshExpires });
+  setCookies(ctx, [
+    { name: "refreshToken", value: refreshTokenJwt, options: { expires } },
+    {
+      name: "refreshTokenExpires",
+      value: expires.toISOString(),
+      options: { expires, httpOnly: false },
+    },
+  ]);
 }
 
 export function clearRefreshToken(ctx: Context): void {
@@ -158,7 +186,18 @@ export function clearRefreshToken(ctx: Context): void {
    * Web browsers and other compliant clients will only clear the cookie if the given options
    * are identical to those given to res.cookie(), excluding expires and maxAge.
    */
-  setCookie(ctx, "refreshToken", "", { expires: new Date(0) });
+  const expires = new Date(0);
+  setCookies(ctx, [
+    { name: "refreshToken", value: "", options: { expires } },
+    { name: "refreshTokenExpires", value: "", options: { expires, httpOnly: false } },
+  ]);
+}
+
+export function createAccessToken(sessionId: number): { token: string; tokenExpires: Date } {
+  const token = jwt.sign({ sessionId }, JWT_SECRET, {
+    expiresIn: "15m",
+  });
+  return { token, tokenExpires: new Date(Date.now() + 1000 * 60 * 15) };
 }
 
 export function setCookie(
@@ -172,6 +211,20 @@ export function setCookie(
     options
   );
   ctx.reply.header("Set-Cookie", cookie.serialize(name, value, cookieOptions));
+}
+
+export function setCookies(
+  ctx: Context,
+  cookies: Array<{ name: string; value: string; options?: cookie.CookieSerializeOptions }>
+): void {
+  const serialized = cookies.map(({ name, value, options }) => {
+    const cookieOptions: cookie.CookieSerializeOptions = Object.assign(
+      { path: "/", domain: DOMAIN, httpOnly: true, secure, sameSite },
+      options
+    );
+    return cookie.serialize(name, value, cookieOptions);
+  });
+  ctx.reply.header("Set-Cookie", serialized);
 }
 
 function jwtSign(
@@ -213,11 +266,12 @@ export function generateToken(length = 40): string {
 }
 
 export function isTokenPayload(value: unknown): value is TokenPayload {
-  return _.isObject(value) && (value as unknown as TokenPayload).sessionId !== undefined;
+  return _.isObject(value) && typeof (value as unknown as TokenPayload)?.sessionId === "string";
 }
 
 function isRefreshTokenPayload(value: unknown): value is RefreshTokenPayload {
   return (
+    _.isObject(value) &&
     typeof (value as unknown as RefreshTokenPayload)?.sessionId === "number" &&
     typeof (value as unknown as RefreshTokenPayload)?.sessionToken === "string"
   );

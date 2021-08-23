@@ -35,7 +35,7 @@ model User {
   passwordDigest String    @db.VarChar(64)
   firstName      String?   @db.VarChar(24)
   lastName       String?   @db.VarChar(24)
-  meta           Json
+  meta           Json?
   roles          Role[]
   sessions       Session[]
 }
