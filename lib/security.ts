@@ -5,67 +5,94 @@ import bcrypt from "bcrypt";
 import cookie from "cookie";
 import { addDays, differenceInSeconds } from "date-fns";
 
-import type { FastifyRequest, FastifyInstance } from "fastify";
-import type { User, Session } from "@prisma/client";
-import type { NexusGenFieldTypes } from "schema/generated/nexus";
-import type { Maybe, TokenPayload, RefreshTokenPayload, SessionData } from "./interfaces";
-import type { Context } from "./context";
+import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
+import type { PrismaClient, User, Session } from "@prisma/client";
+import type { Maybe, TokenPayload, RefreshTokenPayload, SessionData } from "lib/interfaces";
 
-import { JWT_SECRET, DOMAIN, BCRYPT_SALT_ROUNDS } from "./constants";
-import { LoginFailed } from "lib/errors";
+import { JWT_SECRET, DOMAIN, BCRYPT_SALT_ROUNDS } from "lib/constants";
+import { NotAuthorized, LoginFailed } from "lib/errors";
 
 const isDev = process.env.NODE_ENV !== "production";
 const secure = !isDev;
 const sameSite = isDev ? "lax" : "strict";
 
-type LoginResponse = NexusGenFieldTypes["LoginResponse"];
-
 export function verifyPassword(password: string, passwordDigest: string): Promise<boolean> {
   return bcrypt.compare(password, passwordDigest);
 }
 
-export function setPasswordHash(password: string): Promise<string> {
+export function createPasswordHash(password: string): Promise<string> {
   return bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
 }
 
-export async function login<Args extends { email: string; password: string }>(
-  args: Args,
-  ctx: Context
-): Promise<LoginResponse> {
-  const refreshToken = await getRefreshToken(ctx);
+export async function login({
+  prisma,
+  request,
+  reply,
+  email,
+  password,
+}: {
+  prisma: PrismaClient;
+  request: FastifyRequest;
+  reply: FastifyReply;
+  email: string;
+  password: string;
+}): Promise<{ token: string; tokenExpires: Date }> {
+  const refreshToken = await getRefreshToken(request);
 
-  const user = await ctx.prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: {
-      email: args.email,
+      email,
     },
     select: {
       id: true,
       passwordDigest: true,
-      email: true,
       roles: true,
-      firstName: true,
-      lastName: true,
     },
   });
 
-  if (!(user && (await verifyPassword(args.password, user.passwordDigest)))) throw LoginFailed();
+  if (!(user && (await verifyPassword(password, user.passwordDigest)))) throw LoginFailed();
 
   // It's possible someone attempts to login after someone else in the same client
   // Or someone could have stolen the refresh token cookie.
   const session =
     !refreshToken || refreshToken.userId !== user.id
-      ? await createSession(ctx, user)
-      : await refreshSession(ctx, refreshToken.sessionId);
+      ? await createSession({ prisma, request, user })
+      : await refreshSession({ prisma, id: refreshToken.sessionId });
 
-  await setRefreshToken(ctx, {
-    userId: user.id,
-    sessionId: session.id,
-    sessionToken: session.token,
+  await setRefreshToken({
+    reply,
+    payload: {
+      userId: user.id,
+      sessionId: session.id,
+      sessionToken: session.token,
+    },
   });
 
-  const accessToken = createAccessToken(session.id);
+  return createAccessToken(session.id);
+}
 
-  return { ...accessToken, user };
+export async function refresh({
+  prisma,
+  request,
+  reply,
+}: {
+  prisma: PrismaClient;
+  request: FastifyRequest;
+  reply: FastifyReply;
+}): Promise<{ token: string; tokenExpires: Date }> {
+  const refreshToken = await getRefreshToken(request);
+  if (!refreshToken) {
+    clearRefreshToken(reply);
+    reply.statusCode = 401;
+    throw new NotAuthorized();
+  }
+  const {
+    id: sessionId,
+    token: sessionToken,
+    userId,
+  } = await refreshSession({ prisma, id: refreshToken.sessionId });
+  await setRefreshToken({ reply, payload: { sessionId, sessionToken, userId } });
+  return createAccessToken(sessionId);
 }
 
 export const authenticate = async (
@@ -114,43 +141,54 @@ export const authenticate = async (
 
     return null;
   } catch (error) {
+    if (error instanceof Error) {
+      request.log.error(`Authorization error: ${error.message}`);
+    }
     return null;
   }
 };
 
-export function createSession(
-  ctx: Context,
-  user: Pick<User, "id">
-): Promise<Pick<Session, "id" | "token">> {
-  return ctx.prisma.session.create({
+function createSession({
+  prisma,
+  request,
+  user,
+}: {
+  prisma: PrismaClient;
+  request: FastifyRequest;
+  user: Pick<User, "id">;
+}): Promise<Pick<Session, "id" | "token">> {
+  return prisma.session.create({
     data: {
       userId: user.id,
       token: generateToken(),
-      ip: ctx.request.ip,
-      userAgent: ctx.request.headers["user-agent"] || "",
+      ip: request.ip,
+      userAgent: request.headers["user-agent"] || "",
     },
     select: { id: true, token: true },
   });
 }
 
-export async function refreshSession(
-  ctx: Context,
-  id: number
-): Promise<Pick<Session, "id" | "token">> {
-  return ctx.prisma.session
+function refreshSession({
+  prisma,
+  id,
+}: {
+  prisma: PrismaClient;
+  id: number;
+}): Promise<Pick<Session, "id" | "token" | "userId">> {
+  return prisma.session
     .update({
       where: { id },
       data: { token: generateToken() },
-      select: { token: true },
+      select: { token: true, userId: true },
     })
-    .then(({ token }) => {
-      return { id, token };
+    .then(({ token, userId }) => {
+      return { id, token, userId };
     });
 }
 
-export async function getRefreshToken(ctx: Context): Promise<RefreshTokenPayload | undefined> {
-  if (ctx.request.headers.cookie) {
-    const { refreshToken } = cookie.parse(ctx.request.headers.cookie);
+async function getRefreshToken(request: FastifyRequest): Promise<RefreshTokenPayload | undefined> {
+  if (request.headers.cookie) {
+    const { refreshToken } = cookie.parse(request.headers.cookie);
     if (typeof refreshToken === "string") {
       try {
         const payload = await jwtVerify(refreshToken);
@@ -165,12 +203,18 @@ export async function getRefreshToken(ctx: Context): Promise<RefreshTokenPayload
   }
 }
 
-export async function setRefreshToken(ctx: Context, payload: RefreshTokenPayload): Promise<void> {
+async function setRefreshToken({
+  reply,
+  payload,
+}: {
+  reply: FastifyReply;
+  payload: RefreshTokenPayload;
+}): Promise<void> {
   const now = new Date();
   const expires = addDays(now, 30);
   const expiresIn = differenceInSeconds(expires, now);
   const refreshTokenJwt = await jwtSign(payload, { expiresIn });
-  setCookies(ctx, [
+  setCookies(reply, [
     { name: "refreshToken", value: refreshTokenJwt, options: { expires } },
     {
       name: "refreshTokenExpires",
@@ -180,41 +224,41 @@ export async function setRefreshToken(ctx: Context, payload: RefreshTokenPayload
   ]);
 }
 
-export function clearRefreshToken(ctx: Context): void {
+function clearRefreshToken(reply: FastifyReply): void {
   /**
    * NOTE: from http://expressjs.com/en/api.html#res.clearCookie
    * Web browsers and other compliant clients will only clear the cookie if the given options
    * are identical to those given to res.cookie(), excluding expires and maxAge.
    */
   const expires = new Date(0);
-  setCookies(ctx, [
+  setCookies(reply, [
     { name: "refreshToken", value: "", options: { expires } },
     { name: "refreshTokenExpires", value: "", options: { expires, httpOnly: false } },
   ]);
 }
 
-export function createAccessToken(sessionId: number): { token: string; tokenExpires: Date } {
+function createAccessToken(sessionId: number): { token: string; tokenExpires: Date } {
   const token = jwt.sign({ sessionId }, JWT_SECRET, {
     expiresIn: "15m",
   });
   return { token, tokenExpires: new Date(Date.now() + 1000 * 60 * 15) };
 }
 
-export function setCookie(
-  ctx: Context,
-  name: string,
-  value: string,
-  options?: cookie.CookieSerializeOptions
-): void {
-  const cookieOptions: cookie.CookieSerializeOptions = Object.assign(
-    { path: "/", domain: DOMAIN, httpOnly: true, secure, sameSite },
-    options
-  );
-  ctx.reply.header("Set-Cookie", cookie.serialize(name, value, cookieOptions));
-}
+// function setCookie(
+//   reply: FastifyReply,
+//   name: string,
+//   value: string,
+//   options?: cookie.CookieSerializeOptions
+// ): void {
+//   const cookieOptions: cookie.CookieSerializeOptions = Object.assign(
+//     { path: "/", domain: DOMAIN, httpOnly: true, secure, sameSite },
+//     options
+//   );
+//   reply.header("Set-Cookie", cookie.serialize(name, value, cookieOptions));
+// }
 
-export function setCookies(
-  ctx: Context,
+function setCookies(
+  reply: FastifyReply,
   cookies: Array<{ name: string; value: string; options?: cookie.CookieSerializeOptions }>
 ): void {
   const serialized = cookies.map(({ name, value, options }) => {
@@ -224,7 +268,7 @@ export function setCookies(
     );
     return cookie.serialize(name, value, cookieOptions);
   });
-  ctx.reply.header("Set-Cookie", serialized);
+  reply.header("Set-Cookie", serialized);
 }
 
 function jwtSign(
@@ -261,12 +305,12 @@ function jwtVerify(token: string, options: jwt.VerifyOptions = {}): Promise<unkn
  * @param {number} length Should be an even number
  * @returns {string} The token
  */
-export function generateToken(length = 40): string {
+function generateToken(length = 40): string {
   return randomBytes(length / 2).toString("hex");
 }
 
 export function isTokenPayload(value: unknown): value is TokenPayload {
-  return _.isObject(value) && typeof (value as unknown as TokenPayload)?.sessionId === "string";
+  return _.isObject(value) && typeof (value as unknown as TokenPayload)?.sessionId === "number";
 }
 
 function isRefreshTokenPayload(value: unknown): value is RefreshTokenPayload {

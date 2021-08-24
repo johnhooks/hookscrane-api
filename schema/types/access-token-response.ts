@@ -1,9 +1,8 @@
 import { objectType } from "nexus";
 
-export const LoginResponseType = objectType({
-  name: "LoginResponse",
+export const AccessTokenResponseType = objectType({
+  name: "AccessTokenResponse",
   definition(t) {
-    t.nonNull.field("user", { type: "User" });
     t.nonNull.string("token");
     t.nonNull.datetime("tokenExpires");
   },

@@ -30,7 +30,7 @@ describe("api endpoints", () => {
 
     const response = await server.inject({
       method: "POST",
-      url: "graphql",
+      url: "/graphql",
       payload: {
         query,
       },

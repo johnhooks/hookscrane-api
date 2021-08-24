@@ -2,6 +2,11 @@
 ### Do not make changes to this file directly
 
 
+type AccessTokenResponse {
+  token: String!
+  tokenExpires: DateTime!
+}
+
 type DailyInspect {
   datetime: DateTime!
   hours: Int!
@@ -65,16 +70,9 @@ enum LogType {
   START
 }
 
-type LoginResponse {
-  token: String!
-  tokenExpires: DateTime!
-  user: User!
-}
-
 type Mutation {
   createDailyInspect(data: DailyInspectCreateInput!): DailyInspect
   createDailyLog(data: DailyLogCreateInput!): DailyLog
-  login(email: String!, password: String!): LoginResponse!
 }
 
 type Query {

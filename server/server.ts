@@ -9,7 +9,7 @@ import fastifyCors from "fastify-cors";
 import fastifyRedis from "fastify-redis";
 import type { Context } from "lib/context";
 
-import authenticatePlugin from "plugins/authenticate";
+import sessionPlugin from "plugins/session";
 import shutdownPlugin from "plugins/shutdown";
 import statusPlugin from "plugins/status";
 import prismaPlugin from "plugins/prisma";
@@ -24,7 +24,7 @@ export function createServer(opts: FastifyServerOptions = {}): FastifyInstance {
   server.register(shutdownPlugin);
   server.register(statusPlugin);
   server.register(prismaPlugin);
-  server.register(authenticatePlugin);
+  server.register(sessionPlugin);
 
   server.register(mercurius, {
     schema,

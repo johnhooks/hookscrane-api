@@ -7,7 +7,7 @@ export const Json = asNexusMethod(JSONObjectResolver, "json");
 
 export { SortOrder, InspectType, LogType, RoleType } from "./enums";
 export { UserType, UserUniqueInput, UserCreateInput } from "./user";
-export { LoginResponseType } from "./login-response";
+export { AccessTokenResponseType } from "./access-token-response";
 export { DailyLogType, DailyLogUniqueInput, DailyLogCreateInput } from "./daily-log";
 export {
   DailyInspectType,
