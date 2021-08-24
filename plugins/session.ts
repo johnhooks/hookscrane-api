@@ -2,12 +2,14 @@ import type { FastifyPluginAsync } from "fastify";
 import fp from "fastify-plugin";
 import { Static, Type } from "@sinclair/typebox";
 
-import { login, refresh, authenticate } from "lib/security";
+import { login, logout, refresh, authenticate } from "lib/security";
 
 const LoginBody = Type.Object({
   email: Type.String({ format: "email" }),
   password: Type.String(),
 });
+
+const Empty = Type.Object({});
 
 const AccessToken = Type.Object({
   token: Type.String(),
@@ -15,6 +17,7 @@ const AccessToken = Type.Object({
 });
 
 type LoginBodyType = Static<typeof LoginBody>;
+type EmptyType = Static<typeof Empty>;
 type AccessTokenType = Static<typeof AccessToken>;
 
 const sessionPlugin: FastifyPluginAsync = fp(
@@ -50,11 +53,31 @@ const sessionPlugin: FastifyPluginAsync = fp(
       }
     );
 
-    server.post<{ Body: never; Reply: AccessTokenType }>(
+    server.post<{ Body: EmptyType; Reply: EmptyType }>(
+      "/logout",
+      {
+        schema: {
+          body: Empty,
+          response: {
+            200: Empty,
+          },
+        },
+      },
+      async (request, reply) => {
+        await logout({
+          prisma: server.prisma,
+          request,
+          reply,
+        });
+        reply.status(200).send({});
+      }
+    );
+
+    server.post<{ Body: EmptyType; Reply: AccessTokenType }>(
       "/refresh",
       {
         schema: {
-          body: {},
+          body: Empty,
           response: {
             200: AccessToken,
           },

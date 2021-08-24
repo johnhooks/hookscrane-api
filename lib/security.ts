@@ -71,6 +71,24 @@ export async function login({
   return createAccessToken(session.id);
 }
 
+export async function logout({
+  prisma,
+  request,
+  reply,
+}: {
+  prisma: PrismaClient;
+  request: FastifyRequest;
+  reply: FastifyReply;
+}): Promise<void> {
+  const refreshToken = await getRefreshToken(request);
+
+  if (!refreshToken) panic(reply);
+
+  await destroySession({ prisma, sessionId: refreshToken.sessionId });
+
+  clearRefreshToken(reply);
+}
+
 export async function refresh({
   prisma,
   request,
@@ -81,17 +99,30 @@ export async function refresh({
   reply: FastifyReply;
 }): Promise<{ token: string; tokenExpires: Date }> {
   const refreshToken = await getRefreshToken(request);
-  if (!refreshToken) {
-    clearRefreshToken(reply);
-    reply.statusCode = 401;
-    throw new NotAuthorized();
+
+  if (!refreshToken) panic(reply);
+
+  const session = await prisma.session.findUnique({
+    where: { id: refreshToken.sessionId },
+    select: { token: true, valid: true, userId: true },
+  });
+
+  if (
+    !session ||
+    session.token !== refreshToken.sessionToken ||
+    session.userId !== refreshToken.userId
+  ) {
+    panic(reply);
   }
+
   const {
     id: sessionId,
     token: sessionToken,
     userId,
   } = await refreshSession({ prisma, id: refreshToken.sessionId });
+
   await setRefreshToken({ reply, payload: { sessionId, sessionToken, userId } });
+
   return createAccessToken(sessionId);
 }
 
@@ -166,6 +197,25 @@ function createSession({
     },
     select: { id: true, token: true },
   });
+}
+
+async function destroySession({
+  prisma,
+  sessionId,
+}: {
+  prisma: PrismaClient;
+  sessionId: number;
+}): Promise<void> {
+  return prisma.session
+    .update({
+      where: {
+        id: sessionId,
+      },
+      data: {
+        valid: false,
+      },
+    })
+    .then(() => undefined);
 }
 
 function refreshSession({
@@ -307,6 +357,12 @@ function jwtVerify(token: string, options: jwt.VerifyOptions = {}): Promise<unkn
  */
 function generateToken(length = 40): string {
   return randomBytes(length / 2).toString("hex");
+}
+
+function panic(reply: FastifyReply, message?: string): never {
+  clearRefreshToken(reply);
+  reply.statusCode = 401;
+  throw new NotAuthorized(message);
 }
 
 export function isTokenPayload(value: unknown): value is TokenPayload {
