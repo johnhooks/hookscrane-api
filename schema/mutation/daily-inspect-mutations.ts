@@ -1,5 +1,7 @@
 import { mutationField, nonNull, arg } from "nexus";
 
+import { NotAuthorized } from "lib/errors";
+
 export const createDailyInspectMutationField = mutationField("createDailyInspect", {
   type: "DailyInspect",
   args: {
@@ -9,8 +11,9 @@ export const createDailyInspectMutationField = mutationField("createDailyInspect
       })
     ),
   },
-  resolve: async (_, args, context) => {
-    const item = await context.prisma.dailyInspect.create({
+  resolve: async (_, args, ctx) => {
+    if (!ctx.request.session?.user) throw NotAuthorized();
+    const item = await ctx.prisma.dailyInspect.create({
       data: {
         type: args.data.type,
         datetime: args.data.datetime,
