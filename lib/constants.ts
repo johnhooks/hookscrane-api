@@ -4,7 +4,7 @@
  */
 
 export const BASE_URL = get("BASE_URL");
-export const COR_ORIGIN = get("CORS_ORIGIN");
+export const CORS_ORIGIN = get("CORS_ORIGIN");
 export const DOMAIN = get("DOMAIN");
 export const JWT_SECRET = get("JWT_SECRET");
 export const REDIS_PASSWORD = get("REDIS_PASSWORD");
