@@ -45,6 +45,23 @@ input DailyLogUniqueInput {
   id: Int!
 }
 
+type DailyVehicleInspect {
+  datetime: DateTime!
+  id: Int!
+  meta: JSONObject
+  miles: Int!
+}
+
+input DailyVehicleInspectCreateInput {
+  datetime: DateTime!
+  meta: JSONObject
+  miles: Int!
+}
+
+input DailyVehicleInspectUniqueInput {
+  id: Int!
+}
+
 """
 A date string, such as 2007-12-03, compliant with the `full-date` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
 """
@@ -54,6 +71,23 @@ scalar Date
 A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
 """
 scalar DateTime
+
+type FrequentInspect {
+  datetime: DateTime!
+  hours: Int!
+  id: Int!
+  meta: JSONObject
+}
+
+input FrequentInspectCreateInput {
+  datetime: DateTime!
+  hours: Int!
+  meta: JSONObject
+}
+
+input FrequentInspectUniqueInput {
+  id: Int!
+}
 
 enum InspectType {
   CRANE
@@ -73,6 +107,8 @@ enum LogType {
 type Mutation {
   createDailyInspect(data: DailyInspectCreateInput!): DailyInspect
   createDailyLog(data: DailyLogCreateInput!): DailyLog
+  createDailyVehicleInspect(data: DailyVehicleInspectCreateInput!): DailyVehicleInspect
+  createFrequentInspect(data: FrequentInspectCreateInput!): FrequentInspect
 }
 
 type Query {
@@ -81,7 +117,13 @@ type Query {
   dailyInspectByDate(date: Date!): [DailyInspect!]!
   dailyInspectById(id: Int!): DailyInspect
   dailyLogsById(id: Int!): DailyLog
+  dailyVehicleInspectByDate(date: Date!): [DailyVehicleInspect!]!
+  dailyVehicleInspectById(id: Int!): DailyVehicleInspect
+  frequentInspectByDate(date: Date!): [FrequentInspect!]!
+  frequentInspectById(id: Int!): FrequentInspect
   me: User
+  recentDailyVehicleInspects: [DailyVehicleInspect!]!
+  recentFrequentInspects: [FrequentInspect!]!
   status: Status
 }
 

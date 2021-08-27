@@ -12,6 +12,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum DocType {
+  INSPECT_VEHICLE_DAILY
+  INSPECT_CRANE_FREQUENT
+  INSPECT_CRANE_PERIODIC
+  LOG_VEHICLE
+  MAINTAIN_INIT
+  MAINTAIN_COMPLETE
+}
+
 enum Role {
   USER
   ADMIN
@@ -28,16 +37,17 @@ enum InspectType {
 }
 
 model User {
-  id             Int       @id @default(autoincrement())
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  email          String    @unique @db.VarChar(100)
-  passwordDigest String    @db.VarChar(64)
-  firstName      String?   @db.VarChar(24)
-  lastName       String?   @db.VarChar(24)
+  id             Int        @id @default(autoincrement())
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  email          String     @unique @db.VarChar(100)
+  passwordDigest String     @db.VarChar(64)
+  firstName      String?    @db.VarChar(24)
+  lastName       String?    @db.VarChar(24)
   meta           Json?
   roles          Role[]
   sessions       Session[]
+  documents      Document[]
 }
 
 model Session {
@@ -70,4 +80,19 @@ model DailyLog {
   datetime DateTime
   miles    Int
   meta     Json
+}
+
+model Document {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  type      DocType
+  datetime  DateTime
+  hours     Int?
+  miles     Int?
+  meta      Json?
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+
+  @@index([type])
 }

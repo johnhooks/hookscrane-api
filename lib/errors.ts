@@ -6,4 +6,6 @@ export const NotAuthorized = createError(
   401
 );
 
+export const NotFound = createError("FST_NOT_FOUND", "Resource not found", 404);
+
 export const LoginFailed = createError("FST_LOGIN_FAILED", "Login attempt failed", 401);

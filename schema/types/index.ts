@@ -14,3 +14,13 @@ export {
   DailyInspectUniqueInput,
   DailyInspectCreateInput,
 } from "./daily-inspect";
+export {
+  DailyVehicleInspectType,
+  DailyVehicleInspectUniqueInput,
+  DailyVehicleInspectCreateInput,
+} from "./daily-vehicle-inspect";
+export {
+  FrequentInspectType,
+  FrequentInspectUniqueInput,
+  FrequentInspectCreateInput,
+} from "./frequent-inspect";
