@@ -72,6 +72,24 @@ A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `dat
 """
 scalar DateTime
 
+enum DocType {
+  INSPECT_CRANE_FREQUENT
+  INSPECT_CRANE_PERIODIC
+  INSPECT_VEHICLE_DAILY
+  LOG_VEHICLE
+  MAINTAIN_COMPLETE
+  MAINTAIN_INIT
+}
+
+type Document {
+  datetime: DateTime!
+  hours: Int
+  id: Int!
+  meta: JSONObject
+  miles: Int
+  pass: Boolean
+}
+
 type FrequentInspect {
   datetime: DateTime!
   hours: Int!
@@ -119,10 +137,12 @@ type Query {
   dailyLogsById(id: Int!): DailyLog
   dailyVehicleInspectByDate(date: Date!): [DailyVehicleInspect!]!
   dailyVehicleInspectById(id: Int!): DailyVehicleInspect
+  documentByDate(date: Date!, types: [DocType!]): [Document!]!
   frequentInspectByDate(date: Date!): [FrequentInspect!]!
   frequentInspectById(id: Int!): FrequentInspect
   me: User
   recentDailyVehicleInspects: [DailyVehicleInspect!]!
+  recentDocuments(types: [DocType!]): [Document!]!
   recentFrequentInspects: [FrequentInspect!]!
   status: Status
 }

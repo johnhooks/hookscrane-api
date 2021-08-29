@@ -5,7 +5,7 @@ export const Date = asNexusMethod(DateResolver, "date");
 export const DateTime = asNexusMethod(DateTimeResolver, "datetime");
 export const Json = asNexusMethod(JSONObjectResolver, "json");
 
-export { SortOrder, InspectType, LogType, RoleType } from "./enums";
+export { DocType, InspectType, LogType, RoleType, SortOrder } from "./enums";
 export { UserType, UserUniqueInput, UserCreateInput } from "./user";
 export { AccessTokenResponseType } from "./access-token-response";
 export { DailyLogType, DailyLogUniqueInput, DailyLogCreateInput } from "./daily-log";
@@ -19,6 +19,7 @@ export {
   DailyVehicleInspectUniqueInput,
   DailyVehicleInspectCreateInput,
 } from "./daily-vehicle-inspect";
+export { DocumentType } from "./document";
 export {
   FrequentInspectType,
   FrequentInspectUniqueInput,

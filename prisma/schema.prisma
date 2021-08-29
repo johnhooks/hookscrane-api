@@ -90,6 +90,7 @@ model Document {
   datetime  DateTime
   hours     Int?
   miles     Int?
+  pass      Boolean?
   meta      Json?
   user      User     @relation(fields: [userId], references: [id])
   userId    Int
