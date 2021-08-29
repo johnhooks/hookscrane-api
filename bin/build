@@ -1,0 +1,38 @@
+#!/usr/bin/env node
+
+const path = require("path");
+const { build } = require("esbuild");
+
+build({
+  entryPoints: [path.resolve(__dirname, "../main.ts")],
+  bundle: true,
+  outdir: path.resolve(__dirname, "../build"),
+  platform: "node",
+  format: "cjs",
+  // For VSCode Node.js debugger to work this needs to be `true` not `"external"`
+  // Otherwise a `sourceMappingURL` will not be added to the bottom of `build/main.js`
+  sourcemap: true,
+  external: [
+    "@prisma/client",
+    "@sinclair/typebox",
+    "bcrypt",
+    "cookie",
+    "date-fns",
+    "fastify",
+    "fastify-cors",
+    "fastify-plugin",
+    "fastify-redis",
+    "graphql",
+    "graphql-scalars",
+    "ioredis",
+    "jsonwebtoken",
+    "lodash",
+    "mercurius",
+    "nexus",
+    "nexus-prisma",
+  ],
+})
+  .then(() => {
+    console.log("build complete");
+  })
+  .catch(() => process.exit(1));

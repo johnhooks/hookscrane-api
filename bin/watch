@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const path = require("path");
 const { build } = require("esbuild");
 
@@ -16,7 +18,7 @@ build({
   outdir: path.resolve(__dirname, "../build"),
   platform: "node",
   format: "cjs",
-  sourcemap: "inline",
+  sourcemap: true,
   external: [
     "@prisma/client",
     "bcrypt",
