@@ -6,10 +6,11 @@ import { startOfDay, endOfDay } from "date-fns";
 type FrequentInspect = NexusGenObjects["FrequentInspect"];
 
 const frequentInspectSelect = {
-  id: true,
   datetime: true,
   hours: true,
+  id: true,
   meta: true,
+  pass: true,
 };
 
 export const recentFrequentInspectsQueryField = queryField("recentFrequentInspects", {
