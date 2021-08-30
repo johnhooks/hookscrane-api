@@ -6,6 +6,7 @@ export const FrequentInspectType = objectType({
     t.nonNull.int("id");
     t.nonNull.datetime("datetime");
     t.nonNull.int("hours");
+    t.nonNull.boolean("pass");
     t.nullable.json("meta");
   },
 });

@@ -7,6 +7,7 @@ export const DocumentType = objectType({
   description: Document.$description,
   definition(t) {
     t.field(Document.id);
+    t.field(Document.type);
     t.field(Document.datetime);
     t.field(Document.miles);
     t.field(Document.hours);

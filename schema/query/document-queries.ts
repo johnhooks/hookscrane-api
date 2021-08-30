@@ -2,12 +2,13 @@ import { queryField, nonNull, nullable, list, arg } from "nexus";
 import { startOfDay, endOfDay } from "date-fns";
 
 const documentSelect = {
-  id: true,
-  type: true,
   datetime: true,
   hours: true,
+  id: true,
   miles: true,
   meta: true,
+  pass: true,
+  type: true,
 };
 
 export const recentDocumentsQueryField = queryField("recentDocuments", {
@@ -28,6 +29,23 @@ export const recentDocumentsQueryField = queryField("recentDocuments", {
         },
       ],
       take: 20,
+      select: documentSelect,
+    });
+    return documents;
+  },
+});
+
+export const documentByIdField = queryField("documentById", {
+  type: nullable("Document"),
+  args: {
+    id: nonNull(arg({ type: "Int" })),
+  },
+  resolve: async (_parent, args, context, _info) => {
+    const { id } = args;
+    const documents = await context.prisma.document.findUnique({
+      where: {
+        id,
+      },
       select: documentSelect,
     });
     return documents;

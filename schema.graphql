@@ -50,6 +50,7 @@ type DailyVehicleInspect {
   id: Int!
   meta: JSONObject
   miles: Int!
+  pass: Boolean!
 }
 
 input DailyVehicleInspectCreateInput {
@@ -88,6 +89,7 @@ type Document {
   meta: JSONObject
   miles: Int
   pass: Boolean
+  type: DocType!
 }
 
 type FrequentInspect {
@@ -95,6 +97,7 @@ type FrequentInspect {
   hours: Int!
   id: Int!
   meta: JSONObject
+  pass: Boolean!
 }
 
 input FrequentInspectCreateInput {
@@ -138,6 +141,7 @@ type Query {
   dailyVehicleInspectByDate(date: Date!): [DailyVehicleInspect!]!
   dailyVehicleInspectById(id: Int!): DailyVehicleInspect
   documentByDate(date: Date!, types: [DocType!]): [Document!]!
+  documentById(id: Int!): Document
   frequentInspectByDate(date: Date!): [FrequentInspect!]!
   frequentInspectById(id: Int!): FrequentInspect
   me: User

@@ -6,7 +6,7 @@
       "request": "launch",
       "name": "Launch Program",
       "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}/build/main.js",
+      "program": "${workspaceFolder}/main.ts",
       "preLaunchTask": "npm: build:esbuild",
       "outFiles": ["${workspaceFolder}/build/**/*.js"],
       "runtimeArgs": ["--require", "dotenv/config"],
