@@ -26,16 +26,6 @@ enum Role {
   ADMIN
 }
 
-enum LogType {
-  START
-  END
-}
-
-enum InspectType {
-  VEHICLE
-  CRANE
-}
-
 model User {
   id             Int        @id @default(autoincrement())
   createdAt      DateTime   @default(now())
@@ -60,26 +50,6 @@ model Session {
   userAgent String   @db.VarChar(200)
   user      User     @relation(fields: [userId], references: [id])
   userId    Int
-}
-
-// These models are to speed up the minimum viable product and get it shipped
-
-model DailyInspect {
-  id       Int         @id @default(autoincrement())
-  type     InspectType
-  datetime DateTime
-  hours    Int
-  meta     Json
-
-  @@index([type])
-}
-
-model DailyLog {
-  id       Int      @id @default(autoincrement())
-  type     LogType
-  datetime DateTime
-  miles    Int
-  meta     Json
 }
 
 model Document {
