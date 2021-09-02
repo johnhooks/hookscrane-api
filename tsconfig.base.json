@@ -1,25 +1,26 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
+    "target": "esnext",
+    "lib": ["esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
     "noEmit": false,
+    "esModuleInterop": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "isolatedModules": true,
     "composite": true,
     "declaration": true,
     "declarationMap": true,
-    "module": "commonjs",
-    "target": "esnext",
-    "moduleResolution": "node",
-    "strict": true,
-    "strictPropertyInitialization":false,
-    "skipLibCheck": true,
-    "allowJs": true,
+    "strictPropertyInitialization": false,
     "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
+    // Necessary for script `generate:nexus`, typescript-transform-paths/register
     "paths": {
       "lib/*": ["lib/*"],
-      "plugins/*": ["plugins/*"],
-      "schema": ["schema/"],
       "schema/*": ["schema/*"],
-      "server/*": ["server/*"],
     },
     "typeRoots": ["types", "./node_modules/@types"]
   }
