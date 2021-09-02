@@ -2,7 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import fp from "fastify-plugin";
 import { Static, Type } from "@sinclair/typebox";
 
-import { login, logout, refresh, authenticate } from "lib/security";
+import { login, logout, refresh } from "lib/security";
 
 const LoginBody = Type.Object({
   email: Type.String({ format: "email" }),
@@ -27,9 +27,9 @@ const sessionPlugin: FastifyPluginAsync = fp(
      */
     server.decorateRequest("session", null);
 
-    server.addHook("onRequest", async request => {
-      request.session = await authenticate(server, request);
-    });
+    // server.addHook("onRequest", async request => {
+    //   request.session = await authenticate(server, request);
+    // });
 
     server.post<{ Body: LoginBodyType; Reply: AccessTokenType }>(
       "/login",

@@ -15,6 +15,7 @@ import statusPlugin from "plugins/status";
 import prismaPlugin from "plugins/prisma";
 import { schema } from "schema";
 import { CORS_ORIGIN, REDIS_PASSWORD } from "lib/constants";
+import { authenticate } from "lib/security";
 
 export function createServer(opts: FastifyServerOptions = {}): FastifyInstance {
   const server = initialize(opts);
@@ -31,6 +32,7 @@ export function createServer(opts: FastifyServerOptions = {}): FastifyInstance {
     path: "/graphql",
     graphiql: true,
     context: async (request: FastifyRequest, reply: FastifyReply): Promise<Context> => {
+      request.session = await authenticate(server, request);
       return {
         redis: server.redis,
         prisma: server.prisma,
