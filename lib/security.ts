@@ -100,7 +100,7 @@ export async function refresh({
 }): Promise<{ token: string; tokenExpires: Date }> {
   const refreshToken = await getRefreshToken(request);
 
-  if (!refreshToken) panic(reply);
+  if (!refreshToken) panic(reply, "[Auth] refreshToken invalid or missing");
 
   const session = await prisma.session.findUnique({
     where: { id: refreshToken.sessionId },
@@ -112,7 +112,14 @@ export async function refresh({
     session.token !== refreshToken.sessionToken ||
     session.userId !== refreshToken.userId
   ) {
-    panic(reply);
+    if (!session) {
+      request.log.error(`[Auth] session not found, sessionId: ${refreshToken.sessionId}`);
+    } else if (session?.token !== refreshToken.sessionToken) {
+      request.log.error(`[Auth] session and refreshToken token mismatch, session.token: ${session.token}, refreshToken.sessionToken: ${refreshToken.sessionToken}`); // prettier-ignore
+    } else if (session.userId !== refreshToken.userId) {
+      request.log.error(`[Auth] session and refreshToken userId mismatch, session.userId: ${session.userId}, refreshToken.userId: ${refreshToken.userId}`); // prettier-ignore
+    }
+    panic(reply, `[Auth] session invalid or missing`);
   }
 
   const {
@@ -236,8 +243,8 @@ function refreshSession({
     });
 }
 
-async function getRefreshToken(request: FastifyRequest): Promise<RefreshTokenPayload | undefined> {
-  if (request.headers.cookie) {
+async function getRefreshToken(request: FastifyRequest): Promise<Maybe<RefreshTokenPayload>> {
+  if (typeof request.headers.cookie === "string") {
     const { refreshToken } = cookie.parse(request.headers.cookie);
     if (typeof refreshToken === "string") {
       try {
@@ -245,12 +252,17 @@ async function getRefreshToken(request: FastifyRequest): Promise<RefreshTokenPay
         if (isRefreshTokenPayload(payload)) {
           return payload;
         }
+        request.log.error(`[Auth] invalid refreshToken payload`, payload);
       } catch (error) {
-        console.error(error);
-        return undefined;
+        request.log.error(`[Auth] refreshToken failed JWT verification`, error);
+        return null;
       }
     }
+    request.log.error(`[Auth] request missing refreshToken cookie`, refreshToken);
+  } else {
+    request.log.error(`[Auth] request missing cookie header`);
   }
+  return null;
 }
 
 async function setRefreshToken({
