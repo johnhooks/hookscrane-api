@@ -372,7 +372,7 @@ function generateToken(length = 40): string {
 }
 
 function panic(reply: FastifyReply, message?: string): never {
-  clearRefreshToken(reply);
+  // clearRefreshToken(reply);
   reply.statusCode = 401;
   throw new NotAuthorized(message);
 }
