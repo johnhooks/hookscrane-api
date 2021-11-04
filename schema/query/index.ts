@@ -1,3 +1,5 @@
+export * from "./daily-inspect-queries";
+export * from "./daily-log-queries";
 export * from "./daily-vehicle-inspect-queries";
 export * from "./document-queries";
 export * from "./frequent-inspect-queries";
