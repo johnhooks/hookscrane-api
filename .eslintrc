@@ -5,7 +5,8 @@
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
     "plugin:import/errors",
-    "plugin:import/warnings"
+    "plugin:import/warnings",
+    "plugin:prettier/recommended"
   ],
   "parserOptions": {
     "ecmaVersion": 2018, // Allows for the parsing of modern ECMAScript features
@@ -19,9 +20,10 @@
       "@typescript-eslint/parser": [".js", ".ts"]
     },
     "import/resolver": {
-      "typescript": {
-        "alwaysTryTypes": true
-      },
+      // This setting made modules that imported date-fns really slow for some reason.
+      // "typescript": {
+      //   "alwaysTryTypes": true
+      // },
       "node": {
         "extensions": [".js", ".ts"]
       },

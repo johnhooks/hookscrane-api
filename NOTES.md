@@ -1,3 +1,27 @@
+## Data Model
+
+- Driver-Vehicle Report
+  - DateTime
+  - Miles
+  - Hours of Service Status - ON_DUTY (driving), WORKING, OFF_DUTY
+  - User
+  - Vehicle
+  - Inspection?
+- Hours of Service
+  - DateTime
+  - Mileage
+  - User
+  - Vehicle
+  - Status - ON_DUTY (driving), WORKING, OFF_DUTY
+- Driver-Vehicle Inspection Reports
+  - Criteria
+  - DateTime
+  - Mileage
+  - User
+  - Vehicle
+- Frequent Crane Inspections
+- Monthly Crane Inspections
+
 ## Stack
 
 - [Fastify](https://www.fastify.io)

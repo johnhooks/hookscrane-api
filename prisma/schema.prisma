@@ -12,6 +12,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// A Trip wraps HOS and DVIR
+// Hour of Service (HOS)
+// Driver-Vehicle Inspection Report (DVIR)
+// enum DocType {
+//   CRANE_FREQUENT
+//   CRANE_PERIODIC
+//   TRIP
+//   MAINTENANCE_START
+//   MAINTENANCE_END
+// }
+
 enum DocType {
   INSPECT_VEHICLE_DAILY
   INSPECT_CRANE_FREQUENT
@@ -19,6 +30,11 @@ enum DocType {
   LOG_VEHICLE
   MAINTAIN_INIT
   MAINTAIN_COMPLETE
+  TRIP
+}
+
+enum DocEdgeType {
+  WAYPOINT
 }
 
 enum Role {
@@ -32,8 +48,14 @@ model User {
   updatedAt      DateTime   @updatedAt
   email          String     @unique @db.VarChar(100)
   passwordDigest String     @db.VarChar(64)
+  verifyEmailToken          String?   @db.VarChar(32)
+  verifyEmailTokenExpires   DateTime? @db.Timestamp
+  resetPasswordToken        String?   @db.VarChar(32)
+  resetPasswordTokenExpires DateTime? @db.Timestamp
   firstName      String?    @db.VarChar(24)
   lastName       String?    @db.VarChar(24)
+  isVerified                Boolean   @default(false)
+  isDeleted                 Boolean   @default(false)
   meta           Json?
   roles          Role[]
   sessions       Session[]
@@ -44,26 +66,44 @@ model Session {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  expires      DateTime
   token     String   @db.VarChar(40)
   valid     Boolean  @default(true)
   ip        String   @db.VarChar(40)
   userAgent String   @db.VarChar(200)
+  refreshCount Int
   user      User     @relation(fields: [userId], references: [id])
   userId    Int
 }
 
 model Document {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   type      DocType
   datetime  DateTime
   hours     Int?
   miles     Int?
   pass      Boolean?
   meta      Json?
-  user      User     @relation(fields: [userId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
   userId    Int
+  // NOTE: The relation linking took some time to figureout, they need to be reversed on these models.
+  parents   DocEdge[] @relation("Child")
+  children  DocEdge[] @relation("Parent")
 
+  @@index([type])
+}
+
+model DocEdge {
+  assignedAt DateTime    @default(now())
+  type       DocEdgeType
+  meta       Json?
+  parent     Document    @relation(name: "Parent", fields: [parentId], references: [id])
+  parentId   Int // relation scalar field (used in the `@relation` attribute above)
+  child      Document    @relation(name: "Child", fields: [childId], references: [id])
+  childId    Int // relation scalar field (used in the `@relation` attribute above)
+
+  @@id([parentId, childId])
   @@index([type])
 }

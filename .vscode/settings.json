@@ -19,6 +19,24 @@
   "editor.quickSuggestionsDelay": 1000,
   "typescript.suggest.completeJSDocs": false,
   "typescript.disableAutomaticTypeAcquisition": true,
+  "eslint.autoFixOnSave": true,
+  "eslint.validate": ["javascript", "typescript"],
+  "eslint.workingDirectories": [
+    "./apps/api",
+    "./apps/client",
+    "./packages/lib-api",
+    "./packages/lib-core",
+    "./packages/lib-web"
+	],
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "[javascript]": {
+    "editor.formatOnSave": false
+  },
+  "[typescript]": {
+    "editor.formatOnSave": false
+  },
   "cSpell.words": [
     "compile",
     "csrf",

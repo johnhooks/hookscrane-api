@@ -1,0 +1,19 @@
+#!/usr/bin/env node
+
+const { PrismaClient } = require("@prisma/client");
+
+const prisma = new PrismaClient({
+  log: ["query", `warn`, `error`],
+});
+
+(async function () {
+  const users = await prisma.user.findMany();
+  const documents = await prisma.document.findMany();
+
+  const data = {
+    users,
+    documents,
+  };
+
+  process.stdout.write(JSON.stringify(data));
+})();
